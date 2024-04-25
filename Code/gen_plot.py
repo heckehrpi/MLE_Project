@@ -14,15 +14,13 @@ class RNG_Plot:
         self._rng = np.random.default_rng(self.seed)
         return None
         
-    def gen_pts(self, num_plots, alpha=5, mu=0, sigma=1, x_min=-5., x_max=5., buffer=0.9):
+    def gen_pts(self, num_plots, pts_min=10, pts_max=50, alpha=5, mu=0, sigma=1, x_min=-5., x_max=5., buffer=0.9):
         self._num_plots = num_plots
         self._x_lim = np.array([x_min, x_max])
-        
-        self._num_pts = self._rng.integers(low=10, high=80)
+        self._num_pts = self._rng.integers(low=pts_min, high=pts_max)
         self.data = np.zeros(self._num_plots, dtype=list)
         ceil = np.zeros(self._num_plots)
         floor = np.zeros(self._num_plots)
-        
         self.w = np.zeros(self._num_plots, dtype=list)
         for i in range(self._num_plots):
             data = np.zeros([self._num_pts, 2])
@@ -36,35 +34,29 @@ class RNG_Plot:
         self._y_lim = np.array([np.min(floor), np.max(ceil)])
         return None
             
-    def plot(self, fig_name="gen_plot2.jpg", fig_dpi=100, save_fig=False):
+    def plot(self, fig_name="gen_plot.jpg", title=None, plot_style="default", fig_dpi=100, save_fig=False):
         self.fig_name = fig_name
-        
+        if plot_style != "default":
+            assert plot_style in plt.style.available, "Plot style must be valid matplotlib style sheet."
         markers = ['.', 'o', 'v', '^', '<', '>', '*', 'h', 's', 'X', 'D', 'd']
-        # colors = ['b', 'g', 'r', 'c', 'm', 'y']
-        colors = ['b', 'r', 'm']
-        
-        marker_style = self._rng.choice(len(markers), size=self._num_plots, replace=False)
-        marker_color = self._rng.choice(len(colors), size=self._num_plots, replace=False)
-        plot_style = self._rng.choice(len(available), replace=False)
-                
-        title = "Title of "+str(self._num_plots)+" Plot(s) of "+str(self._num_pts)+" Points"
-        if self.seed != None:
-            title += "\nSeed: "+str(self.seed)
-        
+        marker_style = self._rng.choice(markers, size=self._num_plots, replace=False)
+        if title == None:
+            title = "Title of "+str(self._num_plots)+" Plot(s) of "+str(self._num_pts)+" Points"
+            if self.seed != None:
+                title += "\nSeed: "+str(self.seed)
         plt.figure(dpi=fig_dpi)
-        plt.style.use(available[plot_style])
+        plt.style.use(plot_style)
         plt.title(title)
         plt.xlabel("Label for x axis from "+str(self._x_lim[0])+" to "+str(self._x_lim[1]))
         plt.ylabel("Label for y axis from "+str(self._y_lim[0])+" to "+str(self._y_lim[1]))
         plt.xlim(self._x_lim)
         plt.ylim(self._y_lim)
-        
         for i in range(self._num_plots):
-            ms = markers[marker_style[i]]
+            ms = marker_style[i]
             plt.plot(self.data[i][:, 0], self.data[i][:, 1], ms)
-        
         if save_fig:
             plt.savefig(fig_name)
+        plt.axis("equal")
         return None
     
     def _y_func(self, x, w, alpha):
